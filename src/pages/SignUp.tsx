@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import { auth } from '../firebase';
+import { db } from '../firebase';
 import { createUserWithEmailAndPassword } from "firebase/auth";
+import { doc, setDoc } from "firebase/firestore";
 import { useNavigate } from 'react-router-dom';
 import "../styles/signUp.css";
 
@@ -12,7 +14,7 @@ const SignUp = () => {
   const [error, setError] = useState("");
   const navigate = useNavigate();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (password !== confirmPassword) {
@@ -20,26 +22,34 @@ const SignUp = () => {
       return;
     }
 
-    createUserWithEmailAndPassword(auth, email, password)
-      .then((userCredential) => {
-        //const user = userCredential.user;
-        navigate("/dashboard");
-      })
-      .catch((error) => {
-        console.log(error.code)
+    try {
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
 
-        if (error.code === "auth/email-already-in-use") {
-          setError("Email is already in use. Please use a different email.");
-        } else if (error.code === "auth/invalid-email") {
-          setError("Email is missing.");
-        } else if (error.code === "auth/missing-password") {
-          setError("Password is missing.")
-        } else if (error.code === "auth/weak-password") {
-          setError("Password should be at least 6 characters.");
-        } else {
-          setError("An error occurred. Please try again later.");
-        }
+      console.log("setting doc");
+      await setDoc(doc(db, "users", user.uid), {
+        username: username,
+        email: email,
+        createdAt: new Date(),
       });
+      console.log("doc done");
+
+      navigate("/dashboard");
+    } catch (error: any) {
+      console.error(error);
+
+      if (error.code === "auth/email-already-in-use") {
+        setError("Email is already in use. Please use a different email.");
+      } else if (error.code === "auth/invalid-email") {
+        setError("Invalid email.");
+      } else if (error.code === "auth/missing-password") {
+        setError("Password is missing.");
+      } else if (error.code === "auth/weak-password") {
+        setError("Password should be at least 6 characters.");
+      } else {
+        setError("An error occurred. Please try again.");
+      }
+    }
   };
 
   return (
