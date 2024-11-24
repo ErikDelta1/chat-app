@@ -1,4 +1,8 @@
-/* chat.css */
+.chat-container-wrapper {
+  height: 100vh;
+  display: flex;
+  align-items: center;
+}
 
 .chat-container {
     display: flex;

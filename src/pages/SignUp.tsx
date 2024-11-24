@@ -26,13 +26,11 @@ const SignUp = () => {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
 
-      console.log("setting doc");
       await setDoc(doc(db, "users", user.uid), {
         username: username,
         email: email,
         createdAt: new Date(),
       });
-      console.log("doc done");
 
       navigate("/dashboard");
     } catch (error: any) {

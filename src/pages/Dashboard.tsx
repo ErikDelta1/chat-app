@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { db } from "../firebase";
 import { collection, getDocs } from "firebase/firestore";
 import { useNavigate } from "react-router-dom";
+import { getAuth } from "firebase/auth";
 import "../styles/dashboard.css";
 
 interface User {
@@ -13,6 +14,8 @@ const Dashboard: React.FC = () => {
   const [users, setUsers] = useState<User[]>([]);
   const [search, setSearch] = useState("");
   const navigate = useNavigate();
+  const auth = getAuth();
+  const currentUserId = auth.currentUser?.uid;
 
   useEffect(() => {
     const fetchUsers = async () => {
@@ -22,14 +25,16 @@ const Dashboard: React.FC = () => {
           id: doc.id,
           ...doc.data(),
         })) as User[];
-        setUsers(userList);
+
+        const filteredUsers = userList.filter((user) => user.id !== currentUserId);
+        setUsers(filteredUsers);
       } catch (error) {
         console.error("Error fetching users:", error);
       }
     };
 
     fetchUsers();
-  }, []);
+  }, [currentUserId]);
 
   const filteredUsers = users.filter((user) =>
     user.username.toLowerCase().includes(search.toLowerCase())
